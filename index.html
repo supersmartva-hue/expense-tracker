@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExpenseIQ — Smart Expense Tracker</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+
+    <div id="toast-container"></div>
+
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">&#9671;</div>
+        <span class="brand-name">ExpenseIQ</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active">
+          <span class="nav-icon">&#9783;</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="#transactions-section" class="nav-item">
+          <span class="nav-icon">&#8644;</span>
+          <span>Transactions</span>
+        </a>
+        <a href="#add-section" class="nav-item">
+          <span class="nav-icon">&#43;</span>
+          <span>Add New</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="theme-toggle" id="theme-toggle">
+          <span id="theme-icon">&#9788;</span>
+          <span id="theme-label">Light Mode</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger" id="hamburger" aria-label="Toggle menu">&#9776;</button>
+          <div>
+            <h2 class="page-title" id="dashboard">Dashboard</h2>
+            <p class="page-subtitle" id="current-date"></p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="search-box">
+            <span>&#128269;</span>
+            <input type="text" id="search-input" placeholder="Search transactions..." />
+          </div>
+
+          <!-- Currency Selector -->
+          <div class="currency-dropdown" id="currency-dropdown">
+            <button type="button" class="currency-trigger" id="currency-trigger">
+              <span id="currency-flag">&#127482;&#127480;</span>
+              <span id="currency-code">USD</span>
+              <span class="caret">&#9662;</span>
+            </button>
+            <div class="currency-panel" id="currency-panel">
+              <div class="currency-search-wrap">
+                <span>&#128269;</span>
+                <input type="text" id="currency-search" placeholder="Search country or currency..." autocomplete="off" />
+              </div>
+              <div class="currency-list" id="currency-list"></div>
+            </div>
+          </div>
+
+          <button class="btn-export" id="export-btn">&#8659; Export CSV</button>
+        </div>
+      </header>
+
+      <!-- Stats -->
+      <section class="stats-grid">
+        <div class="stat-card stat-balance">
+          <div class="stat-info">
+            <p class="stat-label">Net Balance</p>
+            <h2 class="stat-value" id="balance">$0.00</h2>
+            <p class="stat-sub">All time</p>
+          </div>
+          <div class="stat-icon bal-icon">&#9741;</div>
+        </div>
+        <div class="stat-card stat-income">
+          <div class="stat-info">
+            <p class="stat-label">Total Income</p>
+            <h2 class="stat-value income-val" id="total-income">$0.00</h2>
+            <p class="stat-sub" id="income-count">0 transactions</p>
+          </div>
+          <div class="stat-icon inc-icon">&#8679;</div>
+        </div>
+        <div class="stat-card stat-expense">
+          <div class="stat-info">
+            <p class="stat-label">Total Expenses</p>
+            <h2 class="stat-value expense-val" id="total-expense">$0.00</h2>
+            <p class="stat-sub" id="expense-count">0 transactions</p>
+          </div>
+          <div class="stat-icon exp-icon">&#8681;</div>
+        </div>
+        <div class="stat-card stat-savings">
+          <div class="stat-info">
+            <p class="stat-label">Savings Rate</p>
+            <h2 class="stat-value savings-val" id="savings-rate">0%</h2>
+            <p class="stat-sub">of income saved</p>
+          </div>
+          <div class="stat-icon sav-icon">&#9733;</div>
+        </div>
+      </section>
+
+      <!-- Middle: Charts + Form -->
+      <section class="middle-grid">
+
+        <!-- Doughnut -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h3>Spending by Category</h3>
+          </div>
+          <div class="donut-wrapper">
+            <canvas id="category-chart"></canvas>
+            <p id="chart-empty" class="chart-empty">No expense data yet</p>
+          </div>
+          <div id="donut-legend" class="donut-legend"></div>
+        </div>
+
+        <!-- Bar -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h3>Monthly Overview</h3>
+            <select id="bar-year" class="mini-select"></select>
+          </div>
+          <div class="bar-wrapper">
+            <canvas id="monthly-chart"></canvas>
+            <p id="monthly-empty" class="chart-empty">No data yet</p>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div class="card form-card" id="add-section">
+          <div class="card-header form-card-header">
+            <h3>New Transaction</h3>
+            <span class="form-currency-badge" id="form-currency-badge">USD</span>
+          </div>
+          <form id="transaction-form" autocomplete="off">
+
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="description" placeholder="e.g. Freelance Payment" required />
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label id="amount-label">Amount ($)</label>
+                <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required />
+              </div>
+              <div class="form-group">
+                <label>Type</label>
+                <div class="type-toggle">
+                  <button type="button" class="type-btn active" data-value="income">Income</button>
+                  <button type="button" class="type-btn" data-value="expense">Expense</button>
+                </div>
+                <input type="hidden" id="type" value="income" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Category</label>
+              <div class="cat-grid">
+                <button type="button" class="cat-btn active" data-value="salary">&#128188; Salary</button>
+                <button type="button" class="cat-btn" data-value="food">&#127829; Food</button>
+                <button type="button" class="cat-btn" data-value="transport">&#128664; Transport</button>
+                <button type="button" class="cat-btn" data-value="rent">&#127968; Rent</button>
+                <button type="button" class="cat-btn" data-value="entertainment">&#127926; Fun</button>
+                <button type="button" class="cat-btn" data-value="shopping">&#128717; Shopping</button>
+                <button type="button" class="cat-btn" data-value="health">&#128138; Health</button>
+                <button type="button" class="cat-btn" data-value="utilities">&#9889; Utilities</button>
+                <button type="button" class="cat-btn" data-value="other">&#10022; Other</button>
+              </div>
+              <input type="hidden" id="category" value="salary" />
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="date" required />
+              </div>
+              <div class="form-group">
+                <label>Note <span class="opt">(optional)</span></label>
+                <input type="text" id="note" placeholder="Extra detail..." />
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit">+ Add Transaction</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- History -->
+      <section class="card history-card" id="transactions-section">
+        <div class="card-header">
+          <h3>Transaction History</h3>
+          <div class="history-controls">
+            <select id="filter-type" class="mini-select">
+              <option value="all">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <select id="filter-category" class="mini-select">
+              <option value="all">All Categories</option>
+              <option value="salary">Salary</option>
+              <option value="food">Food</option>
+              <option value="transport">Transport</option>
+              <option value="rent">Rent</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="shopping">Shopping</option>
+              <option value="health">Health</option>
+              <option value="utilities">Utilities</option>
+              <option value="other">Other</option>
+            </select>
+            <select id="filter-month" class="mini-select">
+              <option value="all">All Months</option>
+            </select>
+            <button class="btn-danger-outline" id="clear-all">&#128465; Clear All</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="txn-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Note</th>
+                <th>Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="transaction-list"></tbody>
+          </table>
+          <div id="empty-msg" class="empty-state">
+            <div class="empty-icon">&#128202;</div>
+            <p>No transactions found</p>
+            <span>Add your first transaction to get started</span>
+          </div>
+        </div>
+        <div class="table-footer">
+          <span id="txn-count-label">Showing 0 transactions</span>
+        </div>
+      </section>
+
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
